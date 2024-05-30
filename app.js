@@ -1,4 +1,10 @@
-!
+// CREDITOS DO CRIADOR \\
+
+// https://www.youtube.com/@clovermods/videos
+// https://clover-t-bot.onrender.com
+// https://github.com/trevo-community
+
+// Clover 💚 Trevor Community - Bot do WhatsApp para o servidor de Trevor Community!
 
 const { match } = require('assert');
 const { connected } = require('process');
@@ -6,7 +12,9 @@ try {
 
     const { default: makeWASocket, downloadContentFromMessage, useMultiFileAuthState, makeInMemoryStore, DisconnectReason, WAGroupMetadata, relayWAMessage, MediaPathMap, mentionedJid, processTime, MediaType, Browser, MessageType, Presence, Mimetype, Browsers, delay, fetchLatestBaileysVersion, MessageRetryMap, extractGroupMetadata, generateWAMessageFromContent, proto, getAggregateVotesInPollMessage } = require('@whiskeysockets/baileys');
     const mimetype = require("mime-types")
+    const YouTube = require("youtube-sr").default;
     const fs = require('fs');
+    const path = require("path");
     const P = require('pino');
     const chalk = require('chalk')
     const moment = require('moment-timezone')
@@ -93,9 +101,6 @@ try {
         })
 
 
-
-
-
     const usePairingCode = process.argv.includes('--use-pairing-code')
     const msgRetryCounterCache = new NodeCache();
 
@@ -157,6 +162,50 @@ try {
             const numeroLimpo = numeros.replace(/^(\d{2})(9)?(\d{8,9})$/, '$1$3');
             return numeroLimpo;
         }
+        
+///////////////////////////////////////////////////////////////
+
+// Excluir arquivos temporarios
+function carregarEExcluirConteudo() {
+    const diretorio = "./temparchv";
+
+    // Verifica se é um diretório
+    fs.stat(diretorio, (err, stats) => {
+        if (err) {
+            console.error("Erro ao acessar o diretório:", err);
+            return;
+        }
+
+        if (!stats.isDirectory()) {
+            console.error("O caminho especificado não é um diretório.");
+            return;
+        }
+
+        // Exclui o conteúdo do diretório
+        fs.readdir(diretorio, (err, files) => {
+            if (err) {
+                console.error("Erro ao ler o conteúdo do diretório:", err);
+                return;
+            }
+
+            files.forEach(file => {
+                const filePath = path.join(diretorio, file);
+                fs.unlink(filePath, err => {
+                    if (err) {
+                        console.error(`Erro ao excluir o arquivo ${filePath}:`, err);
+                    } else {
+                        console.log(`Arquivo ${filePath} excluído com sucesso.`);
+                    }
+                });
+            });
+        });
+    });
+}
+
+setTimeout(carregarEExcluirConteudo, 2000)
+
+/////////////////////////////////////////////////////////////////////
+
 
         if (!client.authState.creds.registered) {
             const phoneNumber = await question(`\nDigite seu número do WhatsApp:\nEx: ("+55 21 98384-0381")\n `);
@@ -363,7 +412,12 @@ try {
 
             const GroupMetadata_ = isGroup2 ? await client.groupMetadata(ale.id) : "";
             const mdata_ = isGroup2 ? await client.groupMetadata(ale.id) : "";
+            
 
+
+
+        
+//////////////////////////////////////////
 
             if (welkom2.includes(ale.id)) {
                 try {

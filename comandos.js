@@ -1,9 +1,17 @@
+// CREDITOS DO CRIADOR \\
 
+// https://www.youtube.com/@clovermods/videos
+// https://clover-t-bot.onrender.com
+// https://github.com/trevo-community
+
+// Clover 💚 Trevor Community - Bot do WhatsApp para o servidor de Trevor Community!
 
 const { default: makeWASocket, downloadContentFromMessage, useMultiFileAuthState, makeInMemoryStore, DisconnectReason, WAGroupMetadata, relayWAMessage, MediaPathMap, mentionedJid, processTime, MediaType, Browser, MessageType, Presence, Mimetype, Browsers, delay, fetchLatestBaileysVersion, MessageRetryMap, extractGroupMetadata, generateWAMessageFromContent, proto } = require('@whiskeysockets/baileys');
 
 const mimetype = require("mime-types")
+const YouTube = require("youtube-sr").default;
 const fs = require('fs');
+const path = require("path");
 const P = require('pino');
 const chalk = require('chalk')
 const moment = require('moment-timezone')
@@ -622,7 +630,7 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
         }
 
         const sendGifButao = async (id, gif1, text1, desc1, but = [], vr) => {
-            buttonMessage = { video: { url: gif1 }, caption: text1, gifPlayback: true, footerText: desc1, buttons: but, headerType: 4 }
+            buttonMessage = { video: { url: gif1 }, caption: text1, gifback: true, footerText: desc1, buttons: but, headerType: 4 }
             client.sendMessage(id, buttonMessage, { quoted: vr })
         }
         //*******************************************//
@@ -1093,10 +1101,223 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
                 })
             } break
 
+////////////////////////////////////////////////////////
 
+async function Youtoba(query, limit, fileType) {
+
+  
+// FUNC BY 𝘗𝘚𝘠𝘒𝘏𝘌 \\
+  
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Limpa a query removendo caracteres indesejados e espaços em branco
+            query = query.replace(/\/$|\.mp3|\.mp4|mp3|mp4/gi, '').trim();
+            
+            // Verifica se a query é uma URL
+            if (isUrl(query)) {
+                const videoUrl = query;
+                console.log(videoUrl);
+                // Obtém informações do vídeo a partir da URL
+                const videoInfo = await YouTube.getVideo(videoUrl);
+                
+                // Cria um objeto com os dados do vídeo
+                const videoData = {
+                    title: videoInfo.title,
+                    description: (videoInfo.description || '').replace(/\n/g, '').substring(0, 100) + ((videoInfo.description || '').length > 100 ? '[...]' : ''),
+                    uploadedAt: videoInfo.uploadedAt,
+                    views: videoInfo.views,
+                    duracao: videoInfo.durationFormatted,
+                    likes: videoInfo.likes,
+                    dislikes: videoInfo.dislikes,
+                    thumbnail: videoInfo.thumbnail.url,
+                    url: videoUrl
+                };
+                
+                // Determina a extensão do arquivo com base no tipo especificado
+                let fileExtension = '';
+                if (fileType === 'mp3' || fileType === '.mp3') {
+                    fileExtension = '.mp3';
+                } else if (fileType === 'mp4' || fileType === '.mp4') {
+                    fileExtension = '.mp4';
+                } else if (fileType === 'audio') {
+                    fileExtension = '.mp3';
+                } else if (fileType === 'video') {
+                    fileExtension = '.mp4';
+                }
+                
+                // Cria um nome de arquivo único para salvar temporariamente os dados do vídeo
+                const fileName = `./temparchv/video_${Date.now()}.json`;
+                // Escreve os dados do vídeo em um arquivo JSON
+                fs.writeFileSync(fileName, JSON.stringify({ url: videoUrl, fileExtension }));
+                
+                // Executa um script Python para baixar o vídeo
+                const pythonScriptPath = path.join(__dirname, './ytdownloader', 'main.py');
+                exec(`python ${pythonScriptPath} ${fileName} ${fileExtension}`, async (error, stdout, stderr) => {
+                    if (error) {
+                        console.error('Erro ao chamar o script Python:', error);
+                        reject(error);
+                        return;
+                    }
+                    
+                    // Retorna o caminho do arquivo baixado junto com os dados do vídeo
+                    const filePath = fileName.replace('.json', fileExtension);
+                    resolve({ videoData, filePath, fileExtension });
+                });
+            } else {
+                // Busca vídeos semelhantes se a query não for uma URL
+                const videos = await YouTube.search(query, { limit });
+                
+                if (videos.length > 0) {
+                    let maxSimilarity = 0;
+                    let mostSimilarVideo = null;
+                    // Encontra o vídeo mais semelhante à query fornecida (opcional)
+                    videos.forEach(video => {
+                        const titleWords = video.title.toLowerCase().split(' ');
+                        const queryWords = query.toLowerCase().split(' ');
+                        let similarityCount = 0;
+                        queryWords.forEach(word => {
+                            if (titleWords.includes(word)) {
+                                similarityCount++;
+                            }
+                        });
+                        if (similarityCount > maxSimilarity) {
+                            maxSimilarity = similarityCount;
+                            mostSimilarVideo = video;
+                        }
+                    });
+                    
+                    if (mostSimilarVideo) {
+                        const videoUrl = mostSimilarVideo.url;
+                        
+                        // Obtém informações do vídeo mais semelhante
+                        const videoInfo = await YouTube.getVideo(videoUrl);
+                        
+                        // Cria um objeto com os dados do vídeo
+                        const videoData = {
+                            title: videoInfo.title,
+                            description: (videoInfo.description || '').replace(/\n/g, '').substring(0, 100) + ((videoInfo.description || '').length > 100 ? '[...]' : ''),
+                            uploadedAt: videoInfo.uploadedAt,
+                            views: videoInfo.views,
+                            duracao: videoInfo.durationFormatted,
+                            likes: videoInfo.likes,
+                            dislikes: videoInfo.dislikes,
+                            thumbnail: videoInfo.thumbnail.url,
+                            url: videoUrl
+                        };
+
+                        // Determina a extensão do arquivo com base no tipo especificado
+                        let fileExtension = '';
+                        if (fileType === 'mp3' || fileType === '.mp3') {
+                            fileExtension = '.mp3';
+                        } else if (fileType === 'mp4' || fileType === '.mp4') {
+                            fileExtension = '.mp4';
+                        } else if (fileType === 'audio') {
+                            fileExtension = '.mp3';
+                        } else if (fileType === 'video') {
+                            fileExtension = '.mp4';
+                        }
+                        
+                        // Cria um nome de arquivo único para salvar temporariamente os dados do vídeo
+                        const fileName = `./temparchv/video_${Date.now()}.json`;
+                        // Escreve os dados do vídeo em um arquivo JSON
+                        fs.writeFileSync(fileName, JSON.stringify({ url: videoUrl, fileExtension }));
+                        
+                        // Executa um script Python para baixar o vídeo
+                        const pythonScriptPath = path.join(__dirname, './ytdownloader', 'main.py');
+                        exec(`python ${pythonScriptPath} ${fileName} ${fileExtension}`, async (error, stdout, stderr) => {
+                            if (error) {
+                                console.error('Erro ao chamar o script Python:', error);
+                                reject(error);
+                                return;
+                            }
+    
+                            // Retorna o caminho do arquivo baixado junto com os dados do vídeo
+                            const filePath = fileName.replace('.json', fileExtension);
+                            resolve({ videoData, filePath, fileExtension });
+                        });
+                    } else {
+                        resolve(null);
+                    }
+                    
+                } else {
+                    resolve(null);
+                }
+            }
+        } catch (error) {
+            console.error("Erro ao buscar vídeos:", error);
+            reject(error);
+        }
+    });
+}
+
+//////////////////////////////////////////
 
             // comandos que utilizam a Api \\
-            //case 'play_video':
+            //case '_video':
+            ///////////////////////////////////////////////////////
+
+
+
+      case 'play': {
+    if (!q) return reply(`*⚠️ EXRMPLO DE USO:*
+
+    
+> ${prefix + comando} Lil Giela - Casaco De Couro/mp3
+> ${prefix + comando} URL_DO_VIDEO/mp4
+
+> _SELECIONE A FORMA DE PESQUISA (URL/NOME). E DEPOIS O FORMATO DO ARQUIVO (MP4/MP3/VIDEO/AUDIO)._`);
+
+    try {
+        const suamae = ['mp3', 'mp4', 'video', 'audio'];
+        const removeracentos = str => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const userInput = q.toLowerCase().split("/").map(removeracentos);
+ 
+
+        if (!suamae.includes(userInput[userInput.length - 1])) {
+            return reply(`*[❌] FORMATO DE ARQUIVO NÃO SUPORTADO OU NÃO ESTÁ PRESENTE.*
+            
+> *FORMATOS VÁLIDOS:*
+> MP3;
+> MP4:
+> VIDEO;
+> AUDIO;`);
+        }
+
+        const fileType = userInput.pop();
+        const m = fileType.toUpperCase();
+        
+        const rp = `da uma segurada na minha, q a situação pra baixar o arquivo é complicada aqui...`;
+        
+        await reply(rp);
+        const { videoData, filePath, fileExtension } = await Youtoba(q, 10, fileType); 
+        
+        const { title, description, uploadedAt, views, likes, dislikes, thumbnail, url, duracao } = videoData;
+        
+        
+        
+        // Mensagem contendo as infos do video
+        
+        if (filePath) {
+            // Verifica o tipo de arquivo e envia conforme necessário
+            if (fileExtension === '.mp4') {
+                // Envio do vídeo
+                await client.sendMessage(from, { video: fs.readFileSync(filePath), mimetype: "video/mp4" }, { quoted: info });
+            } else {
+                // Envio do áudio
+                await client.sendMessage(from, { audio: fs.readFileSync(filePath), mimetype: "audio/mpeg" }, { quoted: info });
+            }
+        } else {
+            reply('Nenhum vídeo ou áudio encontrado.');
+        }
+    } catch (err) {
+        reply('❌ 𝙴𝚛𝚛𝚘 𝚊𝚘 𝚘𝚋𝚝𝚎𝚛 𝚒𝚗𝚏𝚘𝚛𝚖𝚊𝚌̧𝚘̃𝚎𝚜!');
+        console.error(err);
+    }
+}
+break;
+
+////////////////////////////
+
             case 'ytmp4':
                 try {
                     if (!q) return reply(`˖⸙̭❛✰❤️Coloque um link do YouTube pata o bot baixar`)
@@ -1115,7 +1336,7 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
                 break
 
 
-            //case 'play_audio':
+            //case '_audio':
             case 'ytmp3':
                 try {
                     if (!q) return reply(`˖⸙̭❛✰❤️Coloque um link do YouTube pata o bot baixar`)
@@ -1133,11 +1354,11 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
                 }
                 break
 
-            case "playvideo":
-            case 'playvd':
+            case "video":
+            case 'vd':
                 if (!q) return reply('Coloque o nome da musica também')
                 reply("「🍉」𝙲𝚊𝚕𝚖𝚘 𝙰𝚛𝚛𝚘𝚖𝚋𝚊𝚍𝚘, 𝙹𝚊 𝚃𝚘 𝙴𝚗𝚟𝚒𝚊𝚗𝚍𝚘...")
-                fetch(`https://clover-t-bot.onrender.com/yt/playmp4?query=${q}&key=Lady-Bot&username=Lady-Bot`).then(response => response.json()).then(ytbr => {
+                fetch(`https://clover-t-bot.onrender.com/yt/mp4?query=${q}&key=Lady-Bot&username=Lady-Bot`).then(response => response.json()).then(ytbr => {
 
                     client.sendMessage(from, { image: { url: `${ytbr.thumb}` }, caption: `「👤」𝙽𝚘𝚖𝚎  ҂ ${ytbr.title}\n「📺」𝙲𝚊𝚗𝚊𝚕  ҂ ${ytbr.channel}\n「📈」𝚅𝚒𝚎𝚠𝚜  ҂ ${ytbr.views}` }, { quoted: info })
 
@@ -1147,11 +1368,11 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
 
                 break
 
-            case "playaudio":
-            case 'play':
+            case "audio":
+            case '':
                 if (!q) return reply('Coloque o nome da musica também')
                 reply("「🍉」𝙲𝚊𝚕𝚖𝚘 𝙰𝚛𝚛𝚘𝚖𝚋𝚊𝚍𝚘, 𝙹𝚊 𝚃𝚘 𝙴𝚗𝚟𝚒𝚊𝚗𝚍𝚘...")
-                fetch(`https://clover-t-bot.onrender.com/yt/playmp4?query=${q}&key=Lady-Bot&username=Lady-Bot`).then(response => response.json()).then(ytbr => {
+                fetch(`https://clover-t-bot.onrender.com/yt/mp4?query=${q}&key=Lady-Bot&username=Lady-Bot`).then(response => response.json()).then(ytbr => {
 
                     client.sendMessage(from, { image: { url: `${ytbr.thumb}` }, caption: `「👤」𝙽𝚘𝚖𝚎  ҂ ${ytbr.title}\n「📺」𝙲𝚊𝚗𝚊𝚕  ҂ ${ytbr.channel}\n「📈」𝚅𝚒𝚎𝚠𝚜  ҂ ${ytbr.views}` }, { quoted: info })
 
@@ -1211,7 +1432,7 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
             // clover-t-bot.onrender.com
 
 
-            case "cosplay":
+            case "cos":
             case "waifu":
             case "waifu2":
             case "shota":
@@ -1673,11 +1894,11 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
                 } else {
                     if (isAntiImg) {
                         buttons002 = [
-                            { buttonId: `${prefix + command} 0`, buttonText: { displayText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 0`, buttonText: { disText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
                         ]
                     } else {
                         buttons002 = [
-                            { buttonId: `${prefix + command} 1`, buttonText: { displayText: '[🌸] ATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 1`, buttonText: { disText: '[🌸] ATIVAR [🌸]' }, type: 1 }
                         ]
                     }
                     buttonMessage02 = {
@@ -1722,11 +1943,11 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
                 } else {
                     if (isAntilinkgp) {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 0`, buttonText: { displayText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 0`, buttonText: { disText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
                         ]
                     } else {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 1`, buttonText: { displayText: '[🌸] ATIVAR [🌸]' }, type: 1 },
+                            { buttonId: `${prefix + command} 1`, buttonText: { disText: '[🌸] ATIVAR [🌸]' }, type: 1 },
                         ]
                     }
                     buttonMessage02 = {
@@ -1771,9 +1992,9 @@ parabéns ${pushname} 🥳 você ganhou o jogo\nPalavra : ${dataAnagrama.origina
             case "logos":
                 // client.sendMessage(from, { react: { text: `🌸`, key: info.key }})
                 //const buuttons = [
-                ////  {buttonId: 'id', buttonText: {displayText: '[👑]  [👑]'}, type: 1},
-                //{buttonId: `${prefix}ping`, buttonText: //{displayText: '[🏓] 𝙋𝙄𝙉𝙂 [🏓]'}, type: 1},
-                //  {buttonId: `${prefix}infodono`, buttonText: //{displayText: '[🍷] 𝘿𝙊𝙉𝙊 [🍷]'}, type: 1}
+                ////  {buttonId: 'id', buttonText: {disText: '[👑]  [👑]'}, type: 1},
+                //{buttonId: `${prefix}ping`, buttonText: //{disText: '[🏓] 𝙋𝙄𝙉𝙂 [🏓]'}, type: 1},
+                //  {buttonId: `${prefix}infodono`, buttonText: //{disText: '[🍷] 𝘿𝙊𝙉𝙊 [🍷]'}, type: 1}
                 //]
 
                 const buuttonMessage = {
@@ -2319,9 +2540,9 @@ ${epa}`,
                     reply('🌸Desativou com sucesso o recurso de auto reação nesse grupo🌸')
                 } else {
                     if (isAutoReact) {
-                        buttons02 = [{ buttonId: `${prefix + command} 0`, buttonText: { displayText: '[🌸] DESATIVAR[🌸]' }, type: 1 }]
+                        buttons02 = [{ buttonId: `${prefix + command} 0`, buttonText: { disText: '[🌸] DESATIVAR[🌸]' }, type: 1 }]
                     } else {
-                        buttons02 = [{ buttonId: `${prefix + command} 1`, buttonText: { displayText: '[🌸] ATIVAR [🌸]' }, type: 1 }]
+                        buttons02 = [{ buttonId: `${prefix + command} 1`, buttonText: { disText: '[🌸] ATIVAR [🌸]' }, type: 1 }]
                     }
                     buttonMessage02 = {
                         text: `╭═─────═⌘═────═╮   
@@ -2357,11 +2578,11 @@ ${epa}`,
                 } else {
                     if (isAntiSticker) {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 0`, buttonText: { displayText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 0`, buttonText: { disText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
                         ]
                     } else {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 1`, buttonText: { displayText: '[🌸] ATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 1`, buttonText: { disText: '[🌸] ATIVAR [🌸]' }, type: 1 }
                         ]
                     }
                     buttonMessage02 = {
@@ -2440,11 +2661,11 @@ ${epa}`,
                 } else {
                     if (isAntiImg) {
                         buttons002 = [
-                            { buttonId: `${prefix + command} 0`, buttonText: { displayText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 0`, buttonText: { disText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
                         ]
                     } else {
                         buttons002 = [
-                            { buttonId: `${prefix + command} 1`, buttonText: { displayText: '[🌸] ATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 1`, buttonText: { disText: '[🌸] ATIVAR [🌸]' }, type: 1 }
                         ]
                     }
                     buttonMessage02 = {
@@ -2514,11 +2735,11 @@ tem que ter a / e o id do grupo destinado senão não vai.`)
                 } else {
                     if (isAntiVid) {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 0`, buttonText: { displayText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 0`, buttonText: { disText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
                         ]
                     } else {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 1`, buttonText: { displayText: '[🌸] ATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 1`, buttonText: { disText: '[🌸] ATIVAR [🌸]' }, type: 1 }
                         ]
                     }
                     buttonMessage02 = {
@@ -2555,11 +2776,11 @@ tem que ter a / e o id do grupo destinado senão não vai.`)
                 } else {
                     if (isAntiAudio) {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 0`, buttonText: { displayText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 0`, buttonText: { disText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
                         ]
                     } else {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 1`, buttonText: { displayText: '[🌸] ATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 1`, buttonText: { disText: '[🌸] ATIVAR [🌸]' }, type: 1 }
                         ]
                     }
                     buttonMessage02 = {
@@ -2603,11 +2824,11 @@ tem que ter a / e o id do grupo destinado senão não vai.`)
                 } else {
                     if (Antidoc) {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 0`, buttonText: { displayText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 0`, buttonText: { disText: '[🌸] DESATIVAR [🌸]' }, type: 1 }
                         ]
                     } else {
                         buttons02 = [
-                            { buttonId: `${prefix + command} 1`, buttonText: { displayText: '[🌸] ATIVAR [🌸]' }, type: 1 }
+                            { buttonId: `${prefix + command} 1`, buttonText: { disText: '[🌸] ATIVAR [🌸]' }, type: 1 }
                         ]
                     }
                     buttonMessage02 = {
@@ -2674,7 +2895,7 @@ tem que ter a / e o id do grupo destinado senão não vai.`)
                             rano = getRandom('.webp')
                             exec(`ffmpeg -i ${rane} -vcodec libwebp -filter:v fps=fps=15 -lossless 1 -loop 0 -preset default -an -vsync 0 -s 800:800 ${rano}`, (err) => {
                                 fs.unlinkSync(rane)
-                                // "android-app-store-link": "https://play.google.com/store/search?q=%2B55%2094%209147-2796%20%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5&c=apps",
+                                // "android-app-store-link": "https://.google.com/store/search?q=%2B55%2094%209147-2796%20%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5%F0%9F%94%A5&c=apps",
                                 var json = {
                                     "sticker-pack-name": legenda,
                                     "sticker-pack-publisher": autor
@@ -2997,9 +3218,9 @@ Parados!🤚🤚\n\n1=🤚🤭@${o01.id.split('@')[0]}🤚🤭\n\n\n2=🤚🤭@$
                 client.sendMessage(from, { react: { text: `💫`, key: info.key } })
                 /*
                 const buuuuuuuttons = [
-                //  {buttonId: 'id', buttonText: {displayText: '[👑]  [👑]'}, type: 1},
-                  {buttonId: `${prefix}menuadm`, buttonText: {displayText: '[💦] 𝙈𝙀𝙉𝙐 𝘼𝘿𝙈 [💦]'}, type: 1},
-                  {buttonId: `${prefix}infodono`, buttonText: {displayText: '[🍷] 𝘿𝙊𝙉𝙊 [🍷]'}, type: 1}
+                //  {buttonId: 'id', buttonText: {disText: '[👑]  [👑]'}, type: 1},
+                  {buttonId: `${prefix}menuadm`, buttonText: {disText: '[💦] 𝙈𝙀𝙉𝙐 𝘼𝘿𝙈 [💦]'}, type: 1},
+                  {buttonId: `${prefix}infodono`, buttonText: {disText: '[🍷] 𝘿𝙊𝙉𝙊 [🍷]'}, type: 1}
                 ]
                 */
                 const buottonMeessage = {
@@ -3012,10 +3233,10 @@ Parados!🤚🤚\n\n1=🤚🤭@${o01.id.split('@')[0]}🤚🤭\n\n\n2=🤚🤭@$
 ║
 ║╭─⊣〘 MENUS 〙
 ║
-╠➽${prefix}playmp3 (link)
-╠➽${prefix}playmp4 (link)
-╠➽${prefix}Playaudio (nome da musica)
-╠➽${prefix}Playvideo (nome do video)
+╠➽${prefix}mp3 (link)
+╠➽${prefix}mp4 (link)
+╠➽${prefix}audio (nome da musica)
+╠➽${prefix}video (nome do video)
 ║
 ╚════• 〘${nomeBot}〙•═════╝
 `,
@@ -3112,7 +3333,7 @@ Parados!🤚🤚\n\n1=🤚🤭@${o01.id.split('@')[0]}🤚🤭\n\n\n2=🤚🤭@$
                 }
                 /*
                 let butttons = [
-                  {buttonId: `${prefix}cassino`, buttonText: {displayText: '💦PRÓXIMO💦'}, type: 1},
+                  {buttonId: `${prefix}cassino`, buttonText: {disText: '💦PRÓXIMO💦'}, type: 1},
                   ]
                   */
                 templateMassage = {
@@ -3561,8 +3782,8 @@ Parados!🤚🤚\n\n1=🤚🤭@${o01.id.split('@')[0]}🤚🤭\n\n\n2=🤚🤭@$
                 cnvt = args.join(" ")
                 reply(`🥳convite enviado com sucesso para meu dono🥳`)
                 sendBtext(`${numeroDono}@s.whatsapp.net`, `🌸convite para entra em um grupo🌸\n\nLink do grupo: ${cnvt}\n\nNúmero dele(a) : wa.me/${sender.split("@")[0]}`, `${nomeBot}️`, [
-                    { buttonId: `${prefix}entrar ${cnvt}`, buttonText: { displayText: `🔮ACEITA🔮` }, type: 1 },
-                    { buttonId: `${prefix}recusar ${sender}`, buttonText: { displayText: `🔮RECUSAR🔮` }, type: 1 }], live)
+                    { buttonId: `${prefix}entrar ${cnvt}`, buttonText: { disText: `🔮ACEITA🔮` }, type: 1 },
+                    { buttonId: `${prefix}recusar ${sender}`, buttonText: { disText: `🔮RECUSAR🔮` }, type: 1 }], live)
                 break
 
             case 'recusar':
@@ -3818,9 +4039,9 @@ ${conselho}`
                 }
                 break
 
-            case "play4": {
+            case "4": {
                 client.sendMessage(from, { react: { text: '🌸️', key: info.key } })
-                if (!q) return reply("digite o nome da música que você deseja exemplo: /play teto m4")
+                if (!q) return reply("digite o nome da música que você deseja exemplo: / teto m4")
                 ab = args.join(" ")
                 res = await ytttts(ab)
                 reply("aguarde enviando..")
@@ -3834,13 +4055,13 @@ ${conselho}`
 𝘚𝘦 𝘷𝘰𝘤𝘦̂ 𝘯𝘢̃𝘰 𝘤𝘰𝘯𝘴𝘦𝘨𝘶𝘪𝘳 𝘷𝘪𝘴𝘶𝘢𝘭𝘪𝘻𝘢𝘳 𝘰𝘴 𝘣𝘰𝘵𝘰̃𝘦𝘴,𝘦𝘹𝘦𝘤𝘶𝘵𝘦 𝘰 𝘱𝘭𝘢𝘺𝘢𝘶𝘥𝘪𝘰, 𝘱𝘭𝘢𝘺𝘷𝘪𝘥𝘦𝘰 𝘤𝘰𝘮𝘰 𝘴𝘦𝘨𝘶𝘯𝘥𝘢 𝘰𝘱𝘤̧𝘢̃𝘰.`
 
                 sendBimg(from, `${res.all[0].image}`, bla, nomeBot, [
-                    { buttonId: `${prefix}playmp3 ${res.all[0].url}`, buttonText: { displayText: '『𝐀𝐔𝐃𝐈𝐎』' }, type: 1 }, { buttonId: `${prefix}playmp4 ${res.all[0].url}`, buttonText: { displayText: '『𝐕𝐈́𝐃𝐄𝐎』' }, type: 1 }], live)
+                    { buttonId: `${prefix}mp3 ${res.all[0].url}`, buttonText: { disText: '『𝐀𝐔𝐃𝐈𝐎』' }, type: 1 }, { buttonId: `${prefix}mp4 ${res.all[0].url}`, buttonText: { disText: '『𝐕𝐈́𝐃𝐄𝐎』' }, type: 1 }], live)
             }
                 break
 
             case 'audio': case 'ytaudio':
                 enviar('*enviando ✨*')
-                bla = await fetchJson(`https://api.brizaloka-api.tk/sociais/v2/ytplaymp3?apikey=brizaloka&query=${q}`)
+                bla = await fetchJson(`https://api.brizaloka-api.tk/sociais/v2/ytmp3?apikey=brizaloka&query=${q}`)
                 audbla = bla.link_src
                 client.sendMessage(from, { audio: { url: audbla }, mimetype: 'audio/mp4' }, { quoted: live })
                 break
@@ -3848,8 +4069,8 @@ ${conselho}`
             case 'tiktok':
                 if (!q.includes("tiktok")) return reply(`Ops, insira o link, só baixo vídeos / audios do ${command} com link`)
                 sendBtext(from, "𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝 𝐃𝐞 𝐕𝐢́𝐝𝐞𝐨 / 𝐀𝐮𝐝𝐢𝐨 [ 𝐓𝐈𝐊𝐓𝐎𝐊 ]\n𝐄𝐬𝐜𝐨𝐥𝐡𝐚 𝐮𝐦𝐚 𝐝𝐚𝐬 𝐨𝐩𝐜̧𝐨̃𝐞𝐬 𝐪𝐮𝐞 𝐝𝐞𝐬𝐞𝐣𝐚", `✨`, [
-                    { buttonId: `${prefix}tiktokaud ${q}`, buttonText: { displayText: `𝐀𝐔𝐃𝐈𝐎` }, type: 100 },
-                    { buttonId: `${prefix}tiktokvd ${q}`, buttonText: { displayText: `𝐕𝐈𝐃𝐄𝐎` }, type: 100 }
+                    { buttonId: `${prefix}tiktokaud ${q}`, buttonText: { disText: `𝐀𝐔𝐃𝐈𝐎` }, type: 100 },
+                    { buttonId: `${prefix}tiktokvd ${q}`, buttonText: { disText: `𝐕𝐈𝐃𝐄𝐎` }, type: 100 }
                 ], live)
                 break;
 
@@ -4090,7 +4311,7 @@ Solicitado por: ${pushname}`
                     random = json[Math.floor(Math.random() * json.length)]
                     /*
                     let proximo = [
-                {buttonId: `${prefix + command}`, buttonText: {displayText: '🌸️PROXIMO🌸️'}, type: 1},
+                {buttonId: `${prefix + command}`, buttonText: {disText: '🌸️PROXIMO🌸️'}, type: 1},
                 ]
                 */
                     templateMassage = {
